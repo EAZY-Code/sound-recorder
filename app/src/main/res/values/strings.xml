@@ -1,9 +1,9 @@
 <resources>
     <string name="app_name">Recorder</string>
     <string name="app_version_title">App version</string>
-    <string name="app_version">Version 2.1 Beta</string>
+    <string name="app_version">Version 2.1</string>
     <string name="app_build_title">App build number</string>
-    <string name="app_build">Build 6</string>
+    <string name="app_build">Build 7</string>
     <string name="app_copyright_title">License</string>
     <string name="app_copyright">Copyright &#169; 2016 &#8211; 2017 EZ Code Developers. Learn more&#8230;</string>
     <string name="app_release_type_title">Application release type</string>

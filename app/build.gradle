@@ -7,8 +7,8 @@ android {
         applicationId "com.ezcode.recorder"
         minSdkVersion 21
         targetSdkVersion 25
-        versionCode 6
-        versionName '2.1 Beta'
+        versionCode 7
+        versionName '2.1'
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
 
         jackOptions {
@@ -25,14 +25,14 @@ android {
             jniDebuggable false
             renderscriptDebuggable false
             minifyEnabled false
-            versionNameSuffix 'internal-dogfood'
+            versionNameSuffix ' Dogfood'
         }
         beta {
             debuggable false
             jniDebuggable false
             renderscriptDebuggable false
             minifyEnabled false
-            versionNameSuffix 'beta'
+            versionNameSuffix ' Beta'
         }
     }
     productFlavors {
