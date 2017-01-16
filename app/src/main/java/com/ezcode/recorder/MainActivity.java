@@ -1,24 +1,21 @@
 package com.ezcode.recorder;
 
 import android.Manifest;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.content.res.ColorStateList;
 import android.media.MediaRecorder;
 import android.net.Uri;
+import android.os.Bundle;
 import android.os.Environment;
-import android.support.annotation.NonNull;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
-import android.os.Bundle;
 import android.text.InputType;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.view.View;
 import android.widget.EditText;
 
 import com.afollestad.materialdialogs.DialogAction;
@@ -42,18 +39,15 @@ public class MainActivity extends AppCompatActivity {
         final FloatingActionButton fabRecord = (FloatingActionButton) findViewById(R.id.floatingActionButtonRecord);
         fabRecord.setImageResource(R.drawable.mic_white);
         fabRecord.setBackgroundTintList(new ColorStateList(new int[][]{new int[]{0}}, new int[]{getResources().getColor(R.color.colorAccent)}));
-        fabRecord.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                if (!recordingState) {
-                    if (ContextCompat.checkSelfPermission(MainActivity.this, Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_DENIED && ContextCompat.checkSelfPermission(MainActivity.this, Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_DENIED && ContextCompat.checkSelfPermission(MainActivity.this, Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_DENIED) {
-                        startRecording();
-                    } else {
-                        permissionsCheckRecording();
-                    }
+        fabRecord.setOnClickListener(view -> {
+            if (!recordingState) {
+                if (ContextCompat.checkSelfPermission(MainActivity.this, Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_DENIED && ContextCompat.checkSelfPermission(MainActivity.this, Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_DENIED && ContextCompat.checkSelfPermission(MainActivity.this, Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_DENIED) {
+                    startRecording();
                 } else {
-                    stopRecording();
+                    permissionsCheckRecording();
                 }
+            } else {
+                stopRecording();
             }
         });
     }
@@ -164,19 +158,11 @@ public class MainActivity extends AppCompatActivity {
                 .checkBoxPromptRes(R.string.action_dont_ask_again, false, null)
                 .negativeText(R.string.action_no_thanks)
                 .positiveText(R.string.action_ok)
-                .onPositive(new MaterialDialog.SingleButtonCallback() {
-                    @Override
-                    public void onClick(@NonNull MaterialDialog dialog, @NonNull DialogAction which) {
-                        Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse("https://play.google.com/apps/testing/com.ezcode.recorder"));
-                        startActivity(intent);
-                    }
+                .onPositive((dialog, which) -> {
+                    Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse("https://play.google.com/apps/testing/com.ezcode.recorder"));
+                    startActivity(intent);
                 })
-                .onNegative(new MaterialDialog.SingleButtonCallback() {
-                    @Override
-                    public void onClick(@NonNull MaterialDialog dialog, @NonNull DialogAction which) {
-                        dialog.dismiss();
-                    }
-                })
+                .onNegative((dialog, which) -> dialog.dismiss())
                 .show();
     }
 
@@ -187,18 +173,8 @@ public class MainActivity extends AppCompatActivity {
                 .content(R.string.dialog_error_recording_content)
                 .negativeText(R.string.action_dismiss)
                 .positiveText(R.string.action_try_again)
-                .onPositive(new MaterialDialog.SingleButtonCallback() {
-                    @Override
-                    public void onClick(@NonNull MaterialDialog dialog, @NonNull DialogAction which) {
-                        permissionsCheckRecording();
-                    }
-                })
-                .onNegative(new MaterialDialog.SingleButtonCallback() {
-                    @Override
-                    public void onClick(@NonNull MaterialDialog dialog, @NonNull DialogAction which) {
-                        dialog.dismiss();
-                    }
-                })
+                .onPositive((dialog, which) -> permissionsCheckRecording())
+                .onNegative((dialog, which) -> dialog.dismiss())
                 .show();
     }
 
@@ -263,23 +239,17 @@ public class MainActivity extends AppCompatActivity {
         builder.setTitle(R.string.dialog_rename_file_title);
         builder.setMessage(R.string.dialog_rename_file_content);
         builder.setView(userEditText);
-        builder.setNegativeButton(R.string.action_cancel, new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialogInterface, int i) {
-                File file = new File(Environment.getExternalStorageDirectory() + File.separator, "temp.tmp");
-                boolean deleted = file.delete();
-            }
+        builder.setNegativeButton(R.string.action_cancel, (dialogInterface, i) -> {
+            File file = new File(Environment.getExternalStorageDirectory() + File.separator, "temp.tmp");
+            boolean deleted = file.delete();
         });
-        builder.setPositiveButton(R.string.action_save, new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialogInterface, int i) {
-                File directory = new File(Environment.getExternalStorageDirectory() + File.separator + "Recordings");
-                directory.mkdirs();
-                String userInput = userEditText.getText().toString();
-                File temp = new File(Environment.getExternalStorageDirectory() + File.separator, "temp.tmp");
-                File dest = new File(Environment.getExternalStorageDirectory() + File.separator + "Recordings" + File.separator, userInput + ".3gpp");
-                temp.renameTo(dest);
-            }
+        builder.setPositiveButton(R.string.action_save, (dialogInterface, i) -> {
+            File directory = new File(Environment.getExternalStorageDirectory() + File.separator + "Recordings");
+            directory.mkdirs();
+            String userInput = userEditText.getText().toString();
+            File temp = new File(Environment.getExternalStorageDirectory() + File.separator, "temp.tmp");
+            File dest = new File(Environment.getExternalStorageDirectory() + File.separator + "Recordings" + File.separator, userInput + ".3gpp");
+            temp.renameTo(dest);
         });
         builder.show();
     }
