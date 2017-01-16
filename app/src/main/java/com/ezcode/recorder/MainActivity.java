@@ -116,8 +116,8 @@ public class MainActivity extends AppCompatActivity {
         fabRecord.setImageResource(R.drawable.mic_white);
         fabRecord.setBackgroundTintList(new ColorStateList(new int[][]{new int[]{0}}, new int[]{getResources().getColor(R.color.colorAccent)}));
         recordingState=false;
-        //dialogRename();
-        renameDialog();
+        dialogRename();
+        //renameDialog();
     }
 
     public void permissionsCheckRecording() {
@@ -135,12 +135,7 @@ public class MainActivity extends AppCompatActivity {
                 new MaterialDialog.Builder(this)
                         .content(R.string.dialog_permissions_record_content)
                         .positiveText(R.string.action_ok)
-                        .onPositive(new MaterialDialog.SingleButtonCallback() {
-                            @Override
-                            public void onClick(@NonNull MaterialDialog dialog, @NonNull DialogAction which) {
-                                permissionsRequestRecording();
-                            }
-                        })
+                        .onPositive((dialog, which) -> permissionsRequestRecording())
                         .show();
 
             } else {
@@ -226,16 +221,31 @@ public class MainActivity extends AppCompatActivity {
                 .inputRangeRes(1, 60, R.color.colorAccent)
                 .inputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_PERSON_NAME | InputType.TYPE_TEXT_FLAG_CAP_WORDS)
                 .positiveText(R.string.action_save)
-                .onPositive(new MaterialDialog.SingleButtonCallback() {
-                    @Override
-                    public void onClick(@NonNull MaterialDialog dialog, @NonNull DialogAction which){
-                        File temp = new File(Environment.getExternalStorageDirectory() + File.separator, "temp.tmp");
-                        File dest = new File(Environment.getExternalStorageDirectory() + File.separator + "Recordings" + File.separator, dialog.getInputEditText() + ".3gpp");
-                        temp.renameTo(dest);
-                    }
+                .onPositive((dialog, which) -> {
+                    //CREATES THE RECORDINGS DIRECTORY
+                    File directory = new File(Environment.getExternalStorageDirectory() + File.separator + "Recordings");
+                    directory.mkdirs();
+
+                    //RENAMES THE TEMP FILE
+                    File temp = new File(Environment.getExternalStorageDirectory() + File.separator, "temp.tmp");
+                    File dest = new File(Environment.getExternalStorageDirectory() + File.separator + "Recordings" + File.separator, dialog.getInputEditText() + ".3gpp");
+                    temp.renameTo(dest);
                 })
                 .negativeText(R.string.action_delete)
-                .input(R.string.dialog_rename_file_hint, R.string.dialog_rename_file_prefill, null)
+                .onNegative((dialog, which) -> {
+
+                    //DELETES THE TEMP FILE
+                    File file = new File(Environment.getExternalStorageDirectory() + File.separator, "temp.tmp");
+                    boolean deleted = file.delete();
+                })
+                .input(R.string.dialog_rename_file_hint, R.string.dialog_rename_file_prefill, false, (dialog, input) -> {
+                    //PREVENT NULL FILENAME
+                    if (input.toString().isEmpty()){
+                        dialog.getActionButton(DialogAction.POSITIVE).setEnabled(false);
+                    } else {
+                        dialog.getActionButton(DialogAction.POSITIVE).setEnabled(true);
+                    }
+                })
                 .show();
     }
 
