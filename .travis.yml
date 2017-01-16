@@ -1,0 +1,18 @@
+language: android
+jdk: oraclejdk8
+android:
+  components:
+    - tools
+    - platform-tools
+    - tools
+    - build-tools-25.0.2
+    - android-25
+  licenses:
+    - 'com.android.support.constraint:constraint-layout:1.0.0-alpha4'
+    - 'com.android.support.constraint:constraint-layout-solver:1.0.0-alpha4'
+    - 'Android SDK Build-Tools 25.0.2'
+    - 'Android SDK Platform 25'
+
+script:
+- chmod +x gradlew
+- ./gradlew build

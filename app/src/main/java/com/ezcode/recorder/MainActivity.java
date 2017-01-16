@@ -1,0 +1,330 @@
+package com.ezcode.recorder;
+
+import android.Manifest;
+import android.content.DialogInterface;
+import android.content.Intent;
+import android.content.pm.PackageManager;
+import android.content.res.ColorStateList;
+import android.media.MediaRecorder;
+import android.net.Uri;
+import android.os.Environment;
+import android.support.annotation.NonNull;
+import android.support.design.widget.FloatingActionButton;
+import android.support.v4.app.ActivityCompat;
+import android.support.v4.content.ContextCompat;
+import android.support.v7.app.AlertDialog;
+import android.support.v7.app.AppCompatActivity;
+import android.os.Bundle;
+import android.support.v7.widget.RecyclerView;
+import android.text.InputType;
+import android.view.Menu;
+import android.view.MenuItem;
+import android.view.View;
+import android.widget.Chronometer;
+import android.widget.EditText;
+
+import com.afollestad.materialdialogs.DialogAction;
+import com.afollestad.materialdialogs.MaterialDialog;
+
+import java.io.File;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.List;
+
+public class MainActivity extends AppCompatActivity {
+
+    public boolean recordingState = false;
+    private MediaRecorder mRecorder = null;
+    public int recordSession = 0;
+    public static final int REQUEST_MULTIPLE_PERMISSIONS_ID = 456;
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_main);
+        final FloatingActionButton fabRecord = (FloatingActionButton) findViewById(R.id.floatingActionButtonRecord);
+        fabRecord.setImageResource(R.drawable.mic_white);
+        fabRecord.setBackgroundTintList(new ColorStateList(new int[][]{new int[]{0}}, new int[]{getResources().getColor(R.color.colorAccent)}));
+        fabRecord.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                if (!recordingState) {
+                    if (ContextCompat.checkSelfPermission(MainActivity.this, Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_DENIED && ContextCompat.checkSelfPermission(MainActivity.this, Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_DENIED && ContextCompat.checkSelfPermission(MainActivity.this, Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_DENIED) {
+                        startRecording();
+                    } else {
+                        permissionsCheckRecording();
+                    }
+                } else {
+                    stopRecording();
+                }
+            }
+        });
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        // Inflate the menu; this adds items to the action bar if it is present.
+        getMenuInflater().inflate(R.menu.menu_main, menu);
+        return true;
+    }
+
+    public boolean onOptionsItemSelected(MenuItem item) {
+        // Handle item selection
+        switch (item.getItemId()) {
+
+            case R.id.menu_item_icon_settings:
+                Intent settingsIconIntent = new Intent(MainActivity.this, SettingsActivity.class);
+                startActivity(settingsIconIntent);
+                return true;
+
+            case R.id.menu_item_help:
+                Intent helpIntent = new Intent(MainActivity.this, HelpActivity.class);
+                startActivity(helpIntent);
+                return true;
+
+
+            default:
+                return super.onOptionsItemSelected(item);
+        }
+    }
+
+    public void startRecording() {
+        FloatingActionButton fabRecord = (FloatingActionButton) findViewById(R.id.floatingActionButtonRecord);
+        fabRecord.setImageResource(R.drawable.stop_white);
+        fabRecord.setBackgroundTintList(new ColorStateList(new int[][]{new int[]{0}}, new int[]{getResources().getColor(R.color.colorAccentDark)}));
+        recordingState = true;
+        mRecorder = new MediaRecorder();
+        mRecorder.setAudioSource(MediaRecorder.AudioSource.MIC);
+        mRecorder.setOutputFormat(MediaRecorder.OutputFormat.THREE_GPP);
+        String tempFileName = Environment.getExternalStorageDirectory() + File.separator + "temp.tmp";
+        mRecorder.setOutputFile(tempFileName);
+        mRecorder.setAudioEncoder(MediaRecorder.AudioEncoder.DEFAULT);
+
+        try {
+
+            mRecorder.prepare();
+            mRecorder.start();
+            recordingState=true;
+
+        } catch (IOException e) {
+
+            e.printStackTrace();
+
+        }
+    }
+
+    public void stopRecording() {
+        mRecorder.stop();
+        FloatingActionButton fabRecord = (FloatingActionButton) findViewById(R.id.floatingActionButtonRecord);
+        fabRecord.setImageResource(R.drawable.mic_white);
+        fabRecord.setBackgroundTintList(new ColorStateList(new int[][]{new int[]{0}}, new int[]{getResources().getColor(R.color.colorAccent)}));
+        recordingState=false;
+        //dialogRename();
+        renameDialog();
+    }
+
+    public void permissionsCheckRecording() {
+
+        int permissionStorageWrite = ContextCompat.checkSelfPermission(MainActivity.this, Manifest.permission.WRITE_EXTERNAL_STORAGE);
+        int permissionStorageRead = ContextCompat.checkSelfPermission(MainActivity.this, Manifest.permission.READ_EXTERNAL_STORAGE);
+        int permissionRecordAudio = ContextCompat.checkSelfPermission(MainActivity.this, Manifest.permission.RECORD_AUDIO);
+
+        if (permissionRecordAudio == PackageManager.PERMISSION_DENIED || permissionStorageRead == PackageManager.PERMISSION_DENIED || permissionStorageWrite == PackageManager.PERMISSION_DENIED) {
+            if (ActivityCompat.shouldShowRequestPermissionRationale(MainActivity.this, Manifest.permission.RECORD_AUDIO)
+                    || ActivityCompat.shouldShowRequestPermissionRationale(MainActivity.this, Manifest.permission.READ_EXTERNAL_STORAGE)
+                    || ActivityCompat.shouldShowRequestPermissionRationale(MainActivity.this, Manifest.permission.WRITE_EXTERNAL_STORAGE)) {
+
+                //Show permission explanation
+                new MaterialDialog.Builder(this)
+                        .content(R.string.dialog_permissions_record_content)
+                        .positiveText(R.string.action_ok)
+                        .onPositive(new MaterialDialog.SingleButtonCallback() {
+                            @Override
+                            public void onClick(@NonNull MaterialDialog dialog, @NonNull DialogAction which) {
+                                permissionsRequestRecording();
+                            }
+                        })
+                        .show();
+
+            } else {
+
+                //Request needed permissions
+                ActivityCompat.requestPermissions(this, new String[]{
+                        android.Manifest.permission.WRITE_EXTERNAL_STORAGE,
+                        Manifest.permission.RECORD_AUDIO,
+                        Manifest.permission.READ_EXTERNAL_STORAGE}, REQUEST_MULTIPLE_PERMISSIONS_ID);
+            }
+        } else {
+            startRecording();
+        }
+    }
+
+    public void permissionsRequestRecording() {
+        ActivityCompat.requestPermissions(this, new String[]{android.Manifest.permission.WRITE_EXTERNAL_STORAGE, Manifest.permission.RECORD_AUDIO, Manifest.permission.READ_EXTERNAL_STORAGE}, REQUEST_MULTIPLE_PERMISSIONS_ID);
+    }
+
+    public void dialogBeta() {
+
+        new MaterialDialog.Builder(this)
+                .title(R.string.dialog_join_beta_title)
+                .content(R.string.dialog_join_beta_content)
+                .iconRes(R.drawable.bug)
+                .checkBoxPromptRes(R.string.action_dont_ask_again, false, null)
+                .negativeText(R.string.action_no_thanks)
+                .positiveText(R.string.action_ok)
+                .onPositive(new MaterialDialog.SingleButtonCallback() {
+                    @Override
+                    public void onClick(@NonNull MaterialDialog dialog, @NonNull DialogAction which) {
+                        Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse("https://play.google.com/apps/testing/com.ezcode.recorder"));
+                        startActivity(intent);
+                    }
+                })
+                .onNegative(new MaterialDialog.SingleButtonCallback() {
+                    @Override
+                    public void onClick(@NonNull MaterialDialog dialog, @NonNull DialogAction which) {
+                        dialog.dismiss();
+                    }
+                })
+                .show();
+    }
+
+    public void dialogErrorRecording() {
+
+        new MaterialDialog.Builder(this)
+                .title(R.string.dialog_error_recording_title)
+                .content(R.string.dialog_error_recording_content)
+                .negativeText(R.string.action_dismiss)
+                .positiveText(R.string.action_try_again)
+                .onPositive(new MaterialDialog.SingleButtonCallback() {
+                    @Override
+                    public void onClick(@NonNull MaterialDialog dialog, @NonNull DialogAction which) {
+                        permissionsCheckRecording();
+                    }
+                })
+                .onNegative(new MaterialDialog.SingleButtonCallback() {
+                    @Override
+                    public void onClick(@NonNull MaterialDialog dialog, @NonNull DialogAction which) {
+                        dialog.dismiss();
+                    }
+                })
+                .show();
+    }
+
+    public void dialogRename() {
+
+        Calendar c = Calendar.getInstance();
+        int year = c.get(Calendar.YEAR);
+        int month = c.get(Calendar.MONTH) + 1;
+        int day = c.get(Calendar.DAY_OF_MONTH);
+        int hour = c.get(Calendar.HOUR_OF_DAY);
+        int minute = c.get(Calendar.MINUTE);
+        int second = c.get(Calendar.SECOND);
+
+        final String fileNameDefault = "SoundRecording " + year + "" + month + "" + day + " " + hour + "" + minute + "" + second;
+
+        new MaterialDialog.Builder(this)
+                .title(R.string.dialog_rename_file_title)
+                .content(R.string.dialog_rename_file_content)
+                .alwaysCallInputCallback()
+                .inputRangeRes(1, 60, R.color.colorAccent)
+                .inputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_PERSON_NAME | InputType.TYPE_TEXT_FLAG_CAP_WORDS)
+                .positiveText(R.string.action_save)
+                .onPositive(new MaterialDialog.SingleButtonCallback() {
+                    @Override
+                    public void onClick(@NonNull MaterialDialog dialog, @NonNull DialogAction which){
+                        File temp = new File(Environment.getExternalStorageDirectory() + File.separator, "temp.tmp");
+                        File dest = new File(Environment.getExternalStorageDirectory() + File.separator + "Recordings" + File.separator, dialog.getInputEditText() + ".3gpp");
+                        temp.renameTo(dest);
+                    }
+                })
+                .negativeText(R.string.action_delete)
+                .input(R.string.dialog_rename_file_hint, R.string.dialog_rename_file_prefill, null)
+                .show();
+    }
+
+    public void renameDialog() {
+        final EditText userEditText = new EditText(this);
+        AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
+        Calendar c = Calendar.getInstance();
+        int year = c.get(Calendar.YEAR);
+        int month = c.get(Calendar.MONTH) + 1;
+        int day = c.get(Calendar.DAY_OF_MONTH);
+        int hour = c.get(Calendar.HOUR_OF_DAY);
+        int minute = c.get(Calendar.MINUTE);
+        int second = c.get(Calendar.SECOND);
+        builder.setCancelable(false);
+        builder.setTitle(R.string.dialog_rename_file_title);
+        builder.setMessage(R.string.dialog_rename_file_content);
+        builder.setView(userEditText);
+        builder.setNegativeButton(R.string.action_cancel, new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialogInterface, int i) {
+                File file = new File(Environment.getExternalStorageDirectory() + File.separator, "temp.tmp");
+                boolean deleted = file.delete();
+            }
+        });
+        builder.setPositiveButton(R.string.action_save, new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialogInterface, int i) {
+                File directory = new File(Environment.getExternalStorageDirectory() + File.separator + "Recordings");
+                directory.mkdirs();
+                String userInput = userEditText.getText().toString();
+                File temp = new File(Environment.getExternalStorageDirectory() + File.separator, "temp.tmp");
+                File dest = new File(Environment.getExternalStorageDirectory() + File.separator + "Recordings" + File.separator, userInput + ".3gpp");
+                temp.renameTo(dest);
+                updateList();
+            }
+        });
+        builder.show();
+    }
+
+    public void updateList() {
+        final FloatingActionButton fabStop = (FloatingActionButton) findViewById(R.id.floatingActionButtonStop);
+        String path = Environment.getExternalStorageDirectory().toString()+"/Recordings";
+        File directoryOfFiles = new File(path);
+        final File[] files = directoryOfFiles.listFiles();
+        mListView = (ListView) findViewById(R.id.recordings_list_view);
+        if (files != null) {
+            String[] listItems = new String[files.length];
+            for (int i = 0; i < files.length; i++) {
+                listItems[i] = files[i].getName();
+            }
+            ArrayAdapter adapter = new ArrayAdapter(this, android.R.layout.simple_list_item_1, listItems);
+            mListView.setAdapter(adapter);
+            mListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+                public void onItemClick(AdapterView parentView, View childView,
+                                        int position, long id) {
+                    //mediaPlayer = MediaPlayer.create(this, Uri.parse("file://"+Environment.getExternalStorageDirectory().getPath()+ "/Recordings/" + files[position].getName()));
+
+                    try {
+                        String path = Environment.getExternalStorageDirectory().getPath() + "/Recordings/" + files[position].getName();
+                        mediaPlayer = new MediaPlayer();
+                        if (mediaPlayer.isPlaying()) {
+                            mediaPlayer.stop();
+                        }
+                        mediaPlayer.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
+                            public void onCompletion(MediaPlayer mp) {
+                                fabStop.setVisibility(View.GONE);
+                            }
+                        });
+                        mediaPlayer.setDataSource(path);
+                        mediaPlayer.prepare();
+                        mediaPlayer.start();
+                        fabStop.setVisibility(View.VISIBLE);
+                    /*MediaPlayer mp = new MediaPlayer();
+                    Log.d("Media", Environment.getExternalStorageDirectory().getPath()+ "/Recordings/" + files[position].getName());
+                    mp.setDataSource(Environment.getExternalStorageDirectory().getPath()+ "/Recordings/" + files[position].getName());
+                    mp.prepare();
+                    mp.start();*/
+                    } catch (IOException e) {
+                        Snackbar snackbar = Snackbar
+                                .make(relativeLayout, "There was a problem", Snackbar.LENGTH_LONG);
+
+                        snackbar.show();
+                    }
+                }
+            });
+        }
+    }
+}
