@@ -15,12 +15,10 @@ import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
-import android.support.v7.widget.RecyclerView;
 import android.text.InputType;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
-import android.widget.Chronometer;
 import android.widget.EditText;
 
 import com.afollestad.materialdialogs.DialogAction;
@@ -28,9 +26,7 @@ import com.afollestad.materialdialogs.MaterialDialog;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.Calendar;
-import java.util.List;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -273,58 +269,8 @@ public class MainActivity extends AppCompatActivity {
                 File temp = new File(Environment.getExternalStorageDirectory() + File.separator, "temp.tmp");
                 File dest = new File(Environment.getExternalStorageDirectory() + File.separator + "Recordings" + File.separator, userInput + ".3gpp");
                 temp.renameTo(dest);
-                updateList();
             }
         });
         builder.show();
-    }
-
-    public void updateList() {
-        final FloatingActionButton fabStop = (FloatingActionButton) findViewById(R.id.floatingActionButtonStop);
-        String path = Environment.getExternalStorageDirectory().toString()+"/Recordings";
-        File directoryOfFiles = new File(path);
-        final File[] files = directoryOfFiles.listFiles();
-        mListView = (ListView) findViewById(R.id.recordings_list_view);
-        if (files != null) {
-            String[] listItems = new String[files.length];
-            for (int i = 0; i < files.length; i++) {
-                listItems[i] = files[i].getName();
-            }
-            ArrayAdapter adapter = new ArrayAdapter(this, android.R.layout.simple_list_item_1, listItems);
-            mListView.setAdapter(adapter);
-            mListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-                public void onItemClick(AdapterView parentView, View childView,
-                                        int position, long id) {
-                    //mediaPlayer = MediaPlayer.create(this, Uri.parse("file://"+Environment.getExternalStorageDirectory().getPath()+ "/Recordings/" + files[position].getName()));
-
-                    try {
-                        String path = Environment.getExternalStorageDirectory().getPath() + "/Recordings/" + files[position].getName();
-                        mediaPlayer = new MediaPlayer();
-                        if (mediaPlayer.isPlaying()) {
-                            mediaPlayer.stop();
-                        }
-                        mediaPlayer.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
-                            public void onCompletion(MediaPlayer mp) {
-                                fabStop.setVisibility(View.GONE);
-                            }
-                        });
-                        mediaPlayer.setDataSource(path);
-                        mediaPlayer.prepare();
-                        mediaPlayer.start();
-                        fabStop.setVisibility(View.VISIBLE);
-                    /*MediaPlayer mp = new MediaPlayer();
-                    Log.d("Media", Environment.getExternalStorageDirectory().getPath()+ "/Recordings/" + files[position].getName());
-                    mp.setDataSource(Environment.getExternalStorageDirectory().getPath()+ "/Recordings/" + files[position].getName());
-                    mp.prepare();
-                    mp.start();*/
-                    } catch (IOException e) {
-                        Snackbar snackbar = Snackbar
-                                .make(relativeLayout, "There was a problem", Snackbar.LENGTH_LONG);
-
-                        snackbar.show();
-                    }
-                }
-            });
-        }
     }
 }
