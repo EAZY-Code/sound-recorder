@@ -197,6 +197,7 @@ public class MainActivity extends AppCompatActivity {
                 .inputRangeRes(1, 60, R.color.colorAccent)
                 .inputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_PERSON_NAME | InputType.TYPE_TEXT_FLAG_CAP_WORDS)
                 .positiveText(R.string.action_save)
+                .canceledOnTouchOutside(false)
                 .onPositive((dialog, which) -> {
                     //CREATES THE RECORDINGS DIRECTORY
                     File directory = new File(Environment.getExternalStorageDirectory() + File.separator + "Recordings");
@@ -217,6 +218,12 @@ public class MainActivity extends AppCompatActivity {
                 .input(R.string.dialog_rename_file_hint, R.string.dialog_rename_file_prefill, false, (dialog, input) -> {
                     //PREVENT NULL FILENAME
                     if (input.toString().isEmpty()){
+                        dialog.getActionButton(DialogAction.POSITIVE).setEnabled(false);
+                    } else {
+                        dialog.getActionButton(DialogAction.POSITIVE).setEnabled(true);
+                    }
+
+                    if (input.length()>60) {
                         dialog.getActionButton(DialogAction.POSITIVE).setEnabled(false);
                     } else {
                         dialog.getActionButton(DialogAction.POSITIVE).setEnabled(true);

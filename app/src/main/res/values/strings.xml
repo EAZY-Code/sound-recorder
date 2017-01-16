@@ -1,7 +1,7 @@
 <resources>
     <string name="app_name">Recorder</string>
     <string name="app_version_title">App version</string>
-    <string name="app_version">Version 2.1 Internal</string>
+    <string name="app_version">Version 2.1 Beta</string>
     <string name="app_build_title">App build number</string>
     <string name="app_build">Build 6</string>
     <string name="app_copyright_title">License</string>
